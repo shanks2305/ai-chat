@@ -34,19 +34,19 @@ export async function fetchMessages(id: number) {
   return ok ? data.messages : [];
 }
 
-export async function createConversation(content: string) {
-  return getJson<{ conversation: Conversation; messages: Message[] }>(
+export async function createConversation(content: string, model: string) {
+  return await getJson<{ conversation: Conversation; messages: Message[] }>(
     "/api/chat/conversations",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, model }),
     },
   );
 }
 
 export async function sendMessage(conversationId: number, content: string, model: string) {
-  return getJson<{ messages: Message[] }>(
+  return await getJson<{ messages: Message[] }>(
     `/api/chat/conversations/${conversationId}/messages`,
     {
       method: "POST",
@@ -71,7 +71,7 @@ export async function submitChatMessage(
   model: string,
 ): Promise<SubmitResult> {
   if (conversationId === null) {
-    const { ok, data } = await createConversation(content);
+    const { ok, data } = await createConversation(content, model);
     if (!ok) return { ok: false, error: apiError(data, "Failed to send message") };
     return { ok: true, kind: "new", conversation: data.conversation, messages: data.messages };
   }

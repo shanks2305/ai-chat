@@ -46,12 +46,12 @@ export function ChatHeader({
       </div>
 
       <div className="flex items-center gap-2">
-        <label className="hidden sm:inline">
+        <label>
           <span className="sr-only">AI model</span>
           <select
             value={selectedModel}
             onChange={(e) => onModelChange(e.target.value)}
-            className="rounded-full border-0 bg-muted px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            className="max-w-28 truncate rounded-full border-0 bg-muted px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 sm:max-w-none"
           >
             {models.map((item) => (
               <option key={item.model} value={item.model}>

@@ -3,10 +3,12 @@ import { requireAuthUser } from "@/lib/api-auth";
 import {
   createConversation,
   createMessage,
-  deriveTitle,
   listConversations,
+  listMessages,
+  updateConversation,
 } from "@/lib/chat-db";
-import { generateDummyResponse } from "@/lib/dummy-ai";
+import generateAiResponse from "@/lib/generate-ai-response";
+import { generateConversationTitle } from "@/lib/generate-conversation-title";
 
 export const runtime = "nodejs";
 
@@ -26,28 +28,15 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const content =
       typeof body.content === "string" ? body.content.trim() : "";
-
-    if (!content) {
-      const conversation = createConversation(auth.user.id);
-      if (!conversation) {
-        return NextResponse.json(
-          { error: "Failed to create conversation" },
-          { status: 500 },
-        );
-      }
-
-      return NextResponse.json({
-        conversation: {
-          id: conversation.id,
-          title: conversation.title,
-          updatedAt: conversation.updated_at,
-          preview: "No messages yet",
-        },
-      });
+    const model = typeof body.model === "string" ? body.model.trim() : "";  
+    if (!content || !model) {
+      return NextResponse.json(
+        { error: "Content and model are required" },
+        { status: 400 },
+      );
     }
 
-    const title = deriveTitle(content);
-    const conversation = createConversation(auth.user.id, title);
+    const conversation = createConversation(auth.user.id);
     if (!conversation) {
       return NextResponse.json(
         { error: "Failed to create conversation" },
@@ -61,20 +50,41 @@ export async function POST(request: Request) {
       "user",
       content,
     );
-    const assistantContent = generateDummyResponse(content);
+    if (!userRow) {
+      return NextResponse.json(
+        { error: "Failed to save message" },
+        { status: 500 },
+      );
+    }
+
+    const conversationHistory = listMessages(auth.user.id, conversation.id);
+    const [{ content: assistantContent, role: assistantRole }, title] =
+      await Promise.all([
+        generateAiResponse(content, model, conversationHistory),
+        generateConversationTitle(content, model),
+      ]);
+    if (!assistantContent || !assistantRole) {
+      return NextResponse.json(
+        { error: "Failed to generate assistant content" },
+        { status: 500 },
+      );
+    }
+
     const assistantRow = createMessage(
       auth.user.id,
       conversation.id,
-      "assistant",
+      assistantRole,
       assistantContent,
     );
 
-    if (!userRow || !assistantRow) {
+    if (!assistantRow) {
       return NextResponse.json(
         { error: "Failed to save messages" },
         { status: 500 },
       );
     }
+
+    updateConversation(auth.user.id, conversation.id, { title });
 
     return NextResponse.json({
       conversation: {

@@ -11,6 +11,7 @@ interface ChatSidebarProps {
   user: ChatUser | null;
   onSelect: (id: number) => void;
   onNewChat: () => void;
+  onClose?: () => void;
 }
 
 function getInitials(name: string) {
@@ -28,9 +29,10 @@ export function ChatSidebar({
   user,
   onSelect,
   onNewChat,
+  onClose,
 }: ChatSidebarProps) {
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-border bg-sidebar">
+    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-border bg-sidebar shadow-xl md:shadow-none">
       <div className="flex items-center justify-between border-b border-border px-4 py-4">
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -55,6 +57,29 @@ export function ChatSidebar({
           </div>
           <span className="font-semibold text-sidebar-foreground">AI Chat</span>
         </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 text-muted-foreground hover:bg-muted md:hidden"
+            aria-label="Close sidebar"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className="p-3">
@@ -86,6 +111,11 @@ export function ChatSidebar({
           Recent
         </p>
         <ul className="space-y-0.5">
+          {conversations.length === 0 && (
+            <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+              No conversations yet
+            </li>
+          )}
           {conversations.map((conversation) => (
             <li key={conversation.id}>
               <button

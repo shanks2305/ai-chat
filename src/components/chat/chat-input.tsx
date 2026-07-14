@@ -1,15 +1,36 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
+  isSending?: boolean;
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+function adjustTextareaHeight(textarea: HTMLTextAreaElement) {
+  textarea.style.height = "auto";
+  textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
+}
+
+export function ChatInput({ onSend, disabled, isSending }: ChatInputProps) {
   const [input, setInput] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const wasSendingRef = useRef(false);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      adjustTextareaHeight(textareaRef.current);
+    }
+  }, [input]);
+
+  useEffect(() => {
+    if (wasSendingRef.current && !isSending) {
+      textareaRef.current?.focus();
+    }
+    wasSendingRef.current = !!isSending;
+  }, [isSending]);
 
   function handleSubmit(event?: FormEvent) {
     event?.preventDefault();
@@ -17,6 +38,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     if (!trimmed || disabled) return;
     onSend(trimmed);
     setInput("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -31,13 +55,14 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
         <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-background p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/30">
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Message AI Chat..."
             rows={1}
             disabled={disabled}
-            className="max-h-40 min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
+            className="max-h-40 min-h-[44px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
           />
           <Button
             type="submit"

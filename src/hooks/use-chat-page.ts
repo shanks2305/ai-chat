@@ -55,24 +55,44 @@ export function useChatPage(models: AiModel[]) {
 
   const handleSend = useCallback(async (content: string) => {
     setError("");
+    const optimisticId = -Date.now();
+    const optimisticMessage: Message = {
+      id: optimisticId,
+      role: "user",
+      content,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
     setIsSending(true);
+
     try {
       const result = await submitChatMessage(activeConversationId, content, selectedModel);
-      if (!result.ok) return setError(result.error);
+      if (!result.ok) {
+        setMessages((prev) => prev.filter((message) => message.id !== optimisticId));
+        setError(result.error);
+        return;
+      }
+
       if (result.kind === "new") {
         setConversations((prev) => [result.conversation, ...prev]);
         setActiveConversationId(result.conversation.id);
         setMessages(result.messages);
         return;
       }
-      setMessages((prev) => [...prev, ...result.messages]);
+
+      setMessages((prev) => {
+        const withoutOptimistic = prev.filter((message) => message.id !== optimisticId);
+        return [...withoutOptimistic, ...result.messages];
+      });
       setConversations(await fetchConversations());
     } catch {
+      setMessages((prev) => prev.filter((message) => message.id !== optimisticId));
       setError("Something went wrong. Please try again.");
     } finally {
       setIsSending(false);
     }
-  }, [activeConversationId]);
+  }, [activeConversationId, selectedModel]);
 
   const handleSignOut = useCallback(async () => {
     await signOut(); router.push("/login"); router.refresh();

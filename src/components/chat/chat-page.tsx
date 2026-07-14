@@ -41,7 +41,7 @@ export function ChatPage({ models }: ChatPageProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1">
+    <div className="flex h-full min-h-0 flex-1 overflow-hidden">
       {isSidebarOpen && (
         <button
           type="button"
@@ -52,7 +52,7 @@ export function ChatPage({ models }: ChatPageProps) {
       )}
 
       <div
-        className={`fixed inset-y-0 left-0 z-50 transition-transform md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 h-full transition-transform md:static md:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -62,10 +62,11 @@ export function ChatPage({ models }: ChatPageProps) {
           user={user}
           onSelect={selectConversation}
           onNewChat={handleNewChat}
+          onClose={() => setIsSidebarOpen(false)}
         />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <ChatHeader
           title={activeConversation?.title ?? "New chat"}
           models={models}
@@ -75,16 +76,26 @@ export function ChatPage({ models }: ChatPageProps) {
           onSignOut={handleSignOut}
         />
 
-        {isLoading ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-            Loading messages...
-          </div>
-        ) : (
-          <MessageList messages={messages} />
-        )}
+        <div className="relative min-h-0 flex-1 overflow-hidden">
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              Loading messages...
+            </div>
+          ) : (
+            <MessageList
+              messages={messages}
+              isSending={isSending}
+              userName={user?.name}
+            />
+          )}
+        </div>
 
-        <ChatStatus error={error} isSending={isSending} />
-        <ChatInput onSend={handleSend} disabled={isSending} />
+        <ChatStatus error={error} />
+        <ChatInput
+          onSend={handleSend}
+          disabled={isSending || isLoading}
+          isSending={isSending}
+        />
       </div>
     </div>
   );

@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { requireAuthUser } from "@/lib/api-auth";
 import {
   createMessage,
-  deriveTitle,
   getConversation,
   listMessages,
   updateConversation,
 } from "@/lib/chat-db";
-import { generateDummyResponse } from "@/lib/dummy-ai";
+import generateAiResponse from "@/lib/generate-ai-response";
+import { generateConversationTitle } from "@/lib/generate-conversation-title";
 
 export const runtime = "nodejs";
 
@@ -65,10 +65,11 @@ export async function POST(request: Request, context: RouteContext) {
     const body = await request.json();
     const content =
       typeof body.content === "string" ? body.content.trim() : "";
+    const model = typeof body.model === "string" ? body.model.trim() : "";
 
-    if (!content) {
+    if (!content || !model) {
       return NextResponse.json(
-        { error: "Message content is required" },
+        { error: "Message content and model are required" },
         { status: 400 },
       );
     }
@@ -86,11 +87,26 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    const assistantContent = generateDummyResponse(content);
+    const conversationHistory = listMessages(auth.user.id, conversationId);
+    const needsTitle = conversation.title === "New chat";
+    const [{ content: assistantContent, role: assistantRole }, title] =
+      await Promise.all([
+        generateAiResponse(content, model, conversationHistory),
+        needsTitle
+          ? generateConversationTitle(content, model)
+          : Promise.resolve(null),
+      ]);
+    if (!assistantContent || !assistantRole) {
+      return NextResponse.json(
+        { error: "Failed to generate assistant content" },
+        { status: 500 },
+      );
+    }
+
     const assistantRow = createMessage(
       auth.user.id,
       conversationId,
-      "assistant",
+      assistantRole,
       assistantContent,
     );
     if (!assistantRow) {
@@ -100,10 +116,8 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    if (conversation.title === "New chat") {
-      updateConversation(auth.user.id, conversationId, {
-        title: deriveTitle(content),
-      });
+    if (title) {
+      updateConversation(auth.user.id, conversationId, { title });
     } else {
       updateConversation(auth.user.id, conversationId, {});
     }
