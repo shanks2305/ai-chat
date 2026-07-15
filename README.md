@@ -1,36 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Chat
 
-## Getting Started
+A modern, full-stack AI chat application built with Next.js. Users can register, sign in, and have persistent conversations with local language models via [Ollama](https://ollama.com/). Conversations support multiple agent modes, response tones, and automatic title generation.
 
-First, run the development server:
+## Features
+
+- **User authentication** — Register, sign in, and sign out with JWT-based sessions
+- **Persistent chat history** — Conversations and messages stored in SQLite
+- **Local AI models** — Chat powered by Ollama (Llama 3.2, Phi 3, Gemma 3)
+- **Agent modes** — General Help, Coding, Dictation, Writing, and Brainstorm
+- **Tone selection** — Friendly, Professional, Casual, Concise, and more
+- **Auto-generated titles** — Conversation titles are created from the first message
+- **Responsive UI** — Sidebar navigation with a mobile-friendly layout
+
+## Tech Stack
+
+- [Next.js 16](https://nextjs.org/) (App Router)
+- [React 19](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS 4](https://tailwindcss.com/)
+- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) for local storage
+- [Ollama](https://ollama.com/) for local LLM inference
+- [OpenAI SDK](https://github.com/openai/openai-node) (compatible with Ollama's API)
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+1. **Node.js 20+** and **npm**
+2. **[Ollama](https://ollama.com/download)** installed and running locally
+
+## Setup
+
+### 1. Clone and install dependencies
+
+```bash
+git clone <repository-url>
+cd ai-chat
+npm install
+```
+
+### 2. Configure environment variables
+
+Create a `.env.local` file in the project root:
+
+```bash
+AUTH_SECRET=your-random-secret-at-least-32-characters-long
+```
+
+`AUTH_SECRET` is used to sign JWT session cookies. Generate a secure value, for example:
+
+```bash
+openssl rand -base64 32
+```
+
+### 3. Start Ollama and pull models
+
+Make sure the Ollama server is running (it listens on `http://localhost:11434` by default):
+
+```bash
+ollama serve
+```
+
+Pull the models used by the app:
+
+```bash
+ollama pull llama3.2:latest
+ollama pull phi3:latest
+ollama pull gemma3:270m
+```
+
+To use different models, update the list in `src/lib/ai-list.ts`.
+
+### 4. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+On first run, the app creates a SQLite database at `data/app.db` automatically. This directory is gitignored.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Usage
 
-## Learn More
+1. Visit the home page and **Create account** or **Sign in**
+2. Open the chat interface at `/chat`
+3. Choose a **model**, **agent mode**, and optional **tone** from the header
+4. Start a new conversation or select an existing one from the sidebar
+5. Type a message and send — the assistant reply is generated via Ollama
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command         | Description                          |
+| --------------- | ------------------------------------ |
+| `npm run dev`   | Start the development server         |
+| `npm run build` | Build the app for production         |
+| `npm run start` | Start the production server          |
+| `npm run lint`  | Run ESLint                           |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── auth/          # Login, register, logout, session
+│   │   └── chat/          # Conversations and messages API
+│   ├── chat/              # Main chat page
+│   ├── login/             # Sign-in page
+│   └── register/          # Registration page
+├── components/
+│   ├── auth/              # Auth forms and layout
+│   ├── chat/              # Chat UI components
+│   └── ui/                # Shared UI primitives
+├── hooks/                 # Client-side chat state
+└── lib/
+    ├── auth.ts            # Session and password helpers
+    ├── chat-db.ts         # Conversation/message queries
+    ├── db.ts              # SQLite schema and user storage
+    ├── generate-ai-response.ts
+    ├── system-promt.ts    # Agent and tone system prompts
+    └── ...
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Variable      | Required | Description                                      |
+| ------------- | -------- | ------------------------------------------------ |
+| `AUTH_SECRET` | Yes      | Secret key for signing JWT session tokens        |
+| `NODE_ENV`    | No       | Set to `production` in production deployments    |
+
+## Troubleshooting
+
+**"AUTH_SECRET environment variable is not set"**  
+Create `.env.local` with a valid `AUTH_SECRET` and restart the dev server.
+
+**AI responses fail or time out**  
+Confirm Ollama is running (`ollama serve`) and the selected model is installed (`ollama list`).
+
+**Database issues**  
+Delete `data/app.db` to reset local storage. The schema is recreated on the next request.
+
+## License
+
+Private project.
