@@ -22,7 +22,6 @@ export default async function generateAiResponse(
       }),
     ),
   ];
-  console.log(messages);
   const response = await openai.chat.completions.create({
     model,
     messages,
