@@ -1,4 +1,5 @@
 import type { Conversation, Message } from "@/lib/chat-types";
+import type { AgentType, ToneType } from "@/lib/system-promt";
 
 export interface AuthUser {
   id: number;
@@ -34,13 +35,18 @@ export async function fetchMessages(id: number) {
   return ok ? data.messages : [];
 }
 
-export async function createConversation(content: string, model: string) {
+export async function createConversation(
+  content: string,
+  model: string,
+  agentType: AgentType,
+  tone: ToneType | null,
+) {
   return await getJson<{ conversation: Conversation; messages: Message[] }>(
     "/api/chat/conversations",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, model }),
+      body: JSON.stringify({ content, model, agentType, tone }),
     },
   );
 }
@@ -69,9 +75,11 @@ export async function submitChatMessage(
   conversationId: number | null,
   content: string,
   model: string,
+  agentType: AgentType,
+  tone: ToneType | null,
 ): Promise<SubmitResult> {
   if (conversationId === null) {
-    const { ok, data } = await createConversation(content, model);
+    const { ok, data } = await createConversation(content, model, agentType, tone);
     if (!ok) return { ok: false, error: apiError(data, "Failed to send message") };
     return { ok: true, kind: "new", conversation: data.conversation, messages: data.messages };
   }

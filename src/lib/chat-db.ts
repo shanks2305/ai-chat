@@ -1,10 +1,13 @@
 import { getDb } from "@/lib/db";
 import type { Conversation, Message } from "@/lib/chat-types";
+import { type AgentType, isAgentType, parseStoredTone, serializeTone, type ToneType } from "@/lib/system-promt";
 
 interface ConversationRow {
   id: number;
   user_id: number;
   title: string;
+  agent_type: AgentType;
+  tones: string;
   created_at: string;
   updated_at: string;
 }
@@ -51,6 +54,8 @@ function toConversation(row: ConversationListRow): Conversation {
     title: row.title,
     updatedAt: formatRelativeDate(row.updated_at),
     preview: row.preview ?? "No messages yet",
+    agentType: isAgentType(row.agent_type) ? row.agent_type : "general",
+    tone: parseStoredTone(row.tones),
   };
 }
 
@@ -62,6 +67,8 @@ export function listConversations(userId: number): Conversation[] {
         c.id,
         c.user_id,
         c.title,
+        c.agent_type,
+        c.tones,
         c.created_at,
         c.updated_at,
         (
@@ -89,12 +96,17 @@ export function getConversation(userId: number, conversationId: number) {
     .get(conversationId, userId) as ConversationRow | undefined;
 }
 
-export function createConversation(userId: number, title = "New chat") {
+export function createConversation(
+  userId: number,
+  title = "New chat",
+  agentType: AgentType = "general",
+  tone: ToneType | null = null,
+) {
   const result = getDb()
     .prepare(
-      "INSERT INTO conversations (user_id, title) VALUES (?, ?)",
+      "INSERT INTO conversations (user_id, title, agent_type, tones) VALUES (?, ?, ?, ?)",
     )
-    .run(userId, title);
+    .run(userId, title, agentType, serializeTone(tone));
 
   const conversationId = Number(result.lastInsertRowid);
   return getConversation(userId, conversationId);

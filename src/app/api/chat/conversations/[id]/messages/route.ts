@@ -8,6 +8,7 @@ import {
 } from "@/lib/chat-db";
 import generateAiResponse from "@/lib/generate-ai-response";
 import { generateConversationTitle } from "@/lib/generate-conversation-title";
+import { parseStoredTone } from "@/lib/system-promt";
 
 export const runtime = "nodejs";
 
@@ -88,10 +89,17 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const conversationHistory = listMessages(auth.user.id, conversationId);
+    const conversationTone = parseStoredTone(conversation.tones);
     const needsTitle = conversation.title === "New chat";
     const [{ content: assistantContent, role: assistantRole }, title] =
       await Promise.all([
-        generateAiResponse(content, model, conversationHistory),
+        generateAiResponse(
+          content,
+          model,
+          conversationHistory,
+          conversation.agent_type,
+          conversationTone,
+        ),
         needsTitle
           ? generateConversationTitle(content, model)
           : Promise.resolve(null),

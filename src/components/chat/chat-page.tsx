@@ -23,9 +23,14 @@ export function ChatPage({ models }: ChatPageProps) {
     isSending,
     error,
     selectedModel,
+    selectedAgentType,
+    selectedTone,
+    isNewChat,
     activeConversation,
     setIsSidebarOpen,
     setSelectedModel,
+    setSelectedAgentType,
+    setSelectedTone,
     handleNewChat,
     selectConversation,
     handleSend,
@@ -71,7 +76,12 @@ export function ChatPage({ models }: ChatPageProps) {
           title={activeConversation?.title ?? "New chat"}
           models={models}
           selectedModel={selectedModel}
+          selectedAgentType={selectedAgentType}
+          selectedTone={selectedTone}
+          isNewChat={isNewChat}
           onModelChange={setSelectedModel}
+          onAgentTypeChange={setSelectedAgentType}
+          onToneChange={setSelectedTone}
           onOpenSidebar={() => setIsSidebarOpen(true)}
           onSignOut={handleSignOut}
         />
@@ -95,6 +105,7 @@ export function ChatPage({ models }: ChatPageProps) {
           onSend={handleSend}
           disabled={isSending || isLoading}
           isSending={isSending}
+          agentType={selectedAgentType}
         />
       </div>
     </div>

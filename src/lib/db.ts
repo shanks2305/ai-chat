@@ -49,6 +49,24 @@ function initSchema(db: Database.Database) {
       FOREIGN KEY (conversation_id) REFERENCES conversations(id)
     );
   `);
+
+  const conversationColumns = db
+    .prepare("PRAGMA table_info(conversations)")
+    .all() as { name: string }[];
+
+  if (!conversationColumns.some((column) => column.name === "agent_type")) {
+    db.exec(`
+      ALTER TABLE conversations
+      ADD COLUMN agent_type TEXT NOT NULL DEFAULT 'general'
+    `);
+  }
+
+  if (!conversationColumns.some((column) => column.name === "tones")) {
+    db.exec(`
+      ALTER TABLE conversations
+      ADD COLUMN tones TEXT NOT NULL DEFAULT ''
+    `);
+  }
 }
 
 function createDatabase() {

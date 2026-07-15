@@ -12,6 +12,7 @@ import {
   type AuthUser,
 } from "@/lib/chat-client";
 import type { Conversation, Message } from "@/lib/chat-types";
+import type { AgentType, ToneType } from "@/lib/system-promt";
 
 export function useChatPage(models: AiModel[]) {
   const router = useRouter();
@@ -24,15 +25,22 @@ export function useChatPage(models: AiModel[]) {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const [selectedModel, setSelectedModel] = useState(() => models[0]?.model ?? "");
+  const [selectedAgentType, setSelectedAgentType] = useState<AgentType>("general");
+  const [selectedTone, setSelectedTone] = useState<ToneType | null>(null);
 
   const selectConversation = useCallback(async (id: number) => {
     setError("");
     setActiveConversationId(id);
     setIsSidebarOpen(false);
     setIsLoading(true);
+    const conversation = conversations.find((item) => item.id === id);
+    if (conversation) {
+      setSelectedAgentType(conversation.agentType);
+      setSelectedTone(conversation.tone);
+    }
     setMessages(await fetchMessages(id));
     setIsLoading(false);
-  }, []);
+  }, [conversations]);
 
   useEffect(() => {
     (async () => {
@@ -43,6 +51,8 @@ export function useChatPage(models: AiModel[]) {
       setConversations(loaded);
       if (loaded[0]) {
         setActiveConversationId(loaded[0].id);
+        setSelectedAgentType(loaded[0].agentType);
+        setSelectedTone(loaded[0].tone);
         setMessages(await fetchMessages(loaded[0].id));
       }
       setIsLoading(false);
@@ -67,7 +77,13 @@ export function useChatPage(models: AiModel[]) {
     setIsSending(true);
 
     try {
-      const result = await submitChatMessage(activeConversationId, content, selectedModel);
+      const result = await submitChatMessage(
+        activeConversationId,
+        content,
+        selectedModel,
+        selectedAgentType,
+        selectedTone,
+      );
       if (!result.ok) {
         setMessages((prev) => prev.filter((message) => message.id !== optimisticId));
         setError(result.error);
@@ -77,6 +93,8 @@ export function useChatPage(models: AiModel[]) {
       if (result.kind === "new") {
         setConversations((prev) => [result.conversation, ...prev]);
         setActiveConversationId(result.conversation.id);
+        setSelectedAgentType(result.conversation.agentType);
+        setSelectedTone(result.conversation.tone);
         setMessages(result.messages);
         return;
       }
@@ -92,7 +110,7 @@ export function useChatPage(models: AiModel[]) {
     } finally {
       setIsSending(false);
     }
-  }, [activeConversationId, selectedModel]);
+  }, [activeConversationId, selectedModel, selectedAgentType, selectedTone]);
 
   const handleSignOut = useCallback(async () => {
     await signOut(); router.push("/login"); router.refresh();
@@ -108,9 +126,14 @@ export function useChatPage(models: AiModel[]) {
     isSending,
     error,
     selectedModel,
+    selectedAgentType,
+    selectedTone,
+    isNewChat: activeConversationId === null,
     activeConversation: conversations.find((c) => c.id === activeConversationId),
     setIsSidebarOpen,
     setSelectedModel,
+    setSelectedAgentType,
+    setSelectedTone,
     handleNewChat,
     selectConversation,
     handleSend,

@@ -1,3 +1,5 @@
+import type { AgentType, ToneType } from "@/lib/system-promt";
+
 export type MessageRole = "user" | "assistant";
 
 export interface Message {
@@ -12,4 +14,6 @@ export interface Conversation {
   title: string;
   updatedAt: string;
   preview: string;
+  agentType: AgentType;
+  tone: ToneType | null;
 }

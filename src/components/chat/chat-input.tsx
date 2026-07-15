@@ -2,19 +2,29 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import type { AgentType } from "@/lib/system-promt";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   isSending?: boolean;
+  agentType?: AgentType;
 }
+
+const placeholders: Record<AgentType, string> = {
+  general: "Ask anything...",
+  coding: "Describe your code problem or paste a snippet...",
+  dictation: "Paste rough dictation or a transcript to clean up...",
+  writing: "Share a draft or describe what you want to write...",
+  brainstorm: "What do you want ideas for?",
+};
 
 function adjustTextareaHeight(textarea: HTMLTextAreaElement) {
   textarea.style.height = "auto";
   textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
 }
 
-export function ChatInput({ onSend, disabled, isSending }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, isSending, agentType = "general" }: ChatInputProps) {
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const wasSendingRef = useRef(false);
@@ -59,7 +69,7 @@ export function ChatInput({ onSend, disabled, isSending }: ChatInputProps) {
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message AI Chat..."
+            placeholder={placeholders[agentType]}
             rows={1}
             disabled={disabled}
             className="max-h-40 min-h-[44px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"

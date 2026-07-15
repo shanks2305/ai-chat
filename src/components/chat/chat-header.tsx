@@ -1,10 +1,16 @@
 import type { AiModel } from "@/lib/ai-list";
+import { agentTypes, isToneType, toneOptions, type AgentType, type ToneType } from "@/lib/system-promt";
 
 interface ChatHeaderProps {
   title: string;
   models: AiModel[];
   selectedModel: string;
+  selectedAgentType: AgentType;
+  selectedTone: ToneType | null;
+  isNewChat: boolean;
   onModelChange: (model: string) => void;
+  onAgentTypeChange: (agentType: AgentType) => void;
+  onToneChange: (tone: ToneType | null) => void;
   onOpenSidebar: () => void;
   onSignOut: () => void;
 }
@@ -13,7 +19,12 @@ export function ChatHeader({
   title,
   models,
   selectedModel,
+  selectedAgentType,
+  selectedTone,
+  isNewChat,
   onModelChange,
+  onAgentTypeChange,
+  onToneChange,
   onOpenSidebar,
   onSignOut,
 }: ChatHeaderProps) {
@@ -46,6 +57,50 @@ export function ChatHeader({
       </div>
 
       <div className="flex items-center gap-2">
+        <label>
+          <span className="sr-only">Agent type</span>
+          <select
+            value={selectedAgentType}
+            onChange={(e) => onAgentTypeChange(e.target.value as AgentType)}
+            disabled={!isNewChat}
+            title={
+              isNewChat
+                ? "Choose how the assistant should behave"
+                : "Agent type is locked for this conversation"
+            }
+            className="max-w-28 truncate rounded-full border-0 bg-muted px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-70 sm:max-w-none"
+          >
+            {agentTypes.map((agent) => (
+              <option key={agent.id} value={agent.id}>
+                {agent.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span className="sr-only">Tone</span>
+          <select
+            value={selectedTone ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              onToneChange(value && isToneType(value) ? value : null);
+            }}
+            disabled={!isNewChat}
+            title={
+              isNewChat
+                ? "Choose how the assistant should sound"
+                : "Tone is locked for this conversation"
+            }
+            className="max-w-28 truncate rounded-full border-0 bg-muted px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-70 sm:max-w-none"
+          >
+            <option value="">No tone</option>
+            {toneOptions.map((tone) => (
+              <option key={tone.id} value={tone.id}>
+                {tone.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <label>
           <span className="sr-only">AI model</span>
           <select
