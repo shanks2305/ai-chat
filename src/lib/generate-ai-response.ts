@@ -2,8 +2,7 @@ import { Message } from "./chat-types";
 import { OpenAI } from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { type AgentType, getSystemPrompt, type ToneType } from "./system-promt";
-
-const baseURL = "http://localhost:11434/v1";
+import { openaiBaseURL } from "./openai-config";
 
 export default async function generateAiResponse(
   _content: string,
@@ -12,7 +11,7 @@ export default async function generateAiResponse(
   agentType: AgentType = "general",
   tone: ToneType | null = null,
 ) {
-  const openai = new OpenAI({ baseURL, apiKey: "1234567890" });
+  const openai = new OpenAI({ baseURL: openaiBaseURL, apiKey: "1234567890" });
   const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: getSystemPrompt(agentType, tone) },
     ...conversationHistory.map(

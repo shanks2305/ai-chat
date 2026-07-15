@@ -45,6 +45,7 @@ Create a `.env.local` file in the project root:
 
 ```bash
 AUTH_SECRET=your-random-secret-at-least-32-characters-long
+OLLAMA_BASE_URL=http://localhost:11434/v1
 ```
 
 `AUTH_SECRET` is used to sign JWT session cookies. Generate a secure value, for example:
@@ -125,10 +126,11 @@ src/
 
 ## Environment Variables
 
-| Variable      | Required | Description                                      |
-| ------------- | -------- | ------------------------------------------------ |
-| `AUTH_SECRET` | Yes      | Secret key for signing JWT session tokens        |
-| `NODE_ENV`    | No       | Set to `production` in production deployments    |
+| Variable           | Required | Description                                      |
+| ------------------ | -------- | ------------------------------------------------ |
+| `AUTH_SECRET`      | Yes      | Secret key for signing JWT session tokens        |
+| `OLLAMA_BASE_URL`  | No       | Ollama OpenAI-compatible API URL (default: `http://localhost:11434/v1`) |
+| `NODE_ENV`         | No       | Set to `production` in production deployments    |
 
 ## Troubleshooting
 

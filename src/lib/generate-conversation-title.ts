@@ -1,7 +1,6 @@
 import { OpenAI } from "openai";
 import { deriveTitle } from "./chat-db";
-
-const baseURL = "http://localhost:11434/v1";
+import { openaiBaseURL } from "./openai-config";
 
 function normalizeTitle(title: string) {
   const trimmed = title.trim().replace(/^["'`]+|["'`]+$/g, "").replace(/\s+/g, " ");
@@ -14,7 +13,7 @@ export async function generateConversationTitle(
   model: string,
 ) {
   try {
-    const openai = new OpenAI({ baseURL, apiKey: "1234567890" });
+    const openai = new OpenAI({ baseURL: openaiBaseURL, apiKey: "1234567890" });
     const response = await openai.chat.completions.create({
       model,
       messages: [
