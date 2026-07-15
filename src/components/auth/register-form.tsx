@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 export function RegisterForm() {
@@ -100,9 +101,8 @@ export function RegisterForm() {
           <Label htmlFor="password" required>
             Password
           </Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             placeholder="••••••••"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -116,9 +116,8 @@ export function RegisterForm() {
           <Label htmlFor="confirmPassword" required>
             Confirm password
           </Label>
-          <Input
+          <PasswordInput
             id="confirmPassword"
-            type="password"
             placeholder="••••••••"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}

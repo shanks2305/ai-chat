@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
 import type { Message } from "@/lib/chat-types";
 
 function getInitials(name: string) {
@@ -17,26 +20,78 @@ interface MessageBubbleProps {
   userName?: string;
 }
 
-function formatContent(content: string) {
-  return content.split("\n").map((line, index) => {
-    const parts = line.split(/(\*\*[^*]+\*\*|\d+\.\s)/g);
+function MarkdownContent({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeHighlight]}
+      components={{
+        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+        ul: ({ children }) => <ul className="mb-2 list-disc pl-5">{children}</ul>,
+        ol: ({ children }) => <ol className="mb-2 list-decimal pl-5">{children}</ol>,
+        li: ({ children }) => <li className="mb-1">{children}</li>,
+        h1: ({ children }) => <h1 className="mb-2 text-lg font-semibold">{children}</h1>,
+        h2: ({ children }) => <h2 className="mb-2 text-base font-semibold">{children}</h2>,
+        h3: ({ children }) => <h3 className="mb-2 text-sm font-semibold">{children}</h3>,
+        blockquote: ({ children }) => (
+          <blockquote className="mb-2 border-l-2 border-border pl-3 text-muted-foreground">
+            {children}
+          </blockquote>
+        ),
+        pre: ({ children }) => (
+          <pre className="code-block my-2 overflow-x-auto rounded-lg border p-3 text-xs">
+            {children}
+          </pre>
+        ),
+        code: ({ className, children, ...props }) => {
+          const isBlock =
+            className?.includes("language-") || className?.includes("hljs");
 
-    return (
-      <span key={index}>
-        {index > 0 && <br />}
-        {parts.map((part, partIndex) => {
-          if (part.startsWith("**") && part.endsWith("**")) {
+          if (isBlock) {
             return (
-              <strong key={partIndex} className="font-semibold">
-                {part.slice(2, -2)}
-              </strong>
+              <code
+                className={`font-mono text-[0.8125rem] leading-relaxed ${className ?? ""}`}
+                {...props}
+              >
+                {children}
+              </code>
             );
           }
-          return part;
-        })}
-      </span>
-    );
-  });
+
+          return (
+            <code className="inline-code rounded px-1.5 py-0.5 font-mono text-xs">
+              {children}
+            </code>
+          );
+        },
+        a: ({ href, children }) => (
+          <a
+            href={href}
+            className="underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {children}
+          </a>
+        ),
+        table: ({ children }) => (
+          <div className="my-2 overflow-x-auto">
+            <table className="w-full border-collapse text-xs">{children}</table>
+          </div>
+        ),
+        th: ({ children }) => (
+          <th className="border border-border px-2 py-1 text-left font-semibold">
+            {children}
+          </th>
+        ),
+        td: ({ children }) => (
+          <td className="border border-border px-2 py-1">{children}</td>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
 }
 
 export function MessageBubble({ message, userName }: MessageBubbleProps) {
@@ -61,7 +116,11 @@ export function MessageBubble({ message, userName }: MessageBubbleProps) {
             : "rounded-tl-sm bg-assistant-bubble text-foreground"
         }`}
       >
-        {formatContent(message.content)}
+        {isUser ? (
+          <span className="whitespace-pre-wrap">{message.content}</span>
+        ) : (
+          <MarkdownContent content={message.content} />
+        )}
       </div>
     </div>
   );

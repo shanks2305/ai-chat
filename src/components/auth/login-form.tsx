@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
@@ -80,9 +81,8 @@ export function LoginForm() {
               Forgot password?
             </button>
           </div>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             placeholder="••••••••"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
